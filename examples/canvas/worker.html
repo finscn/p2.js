@@ -16,7 +16,7 @@
 		var world,
 			timeStep = 1/60,
 			array = null,
-			N = 20;
+			N = 100;
 
 		self.onmessage = function(e) {
 
@@ -142,15 +142,16 @@
 		function drawBodies(){
 			// Draw all bodies. Skip the first one, it's the ground plane
 			for(var i=1; i < N; i++){
-				ctx.beginPath();
 				var x = array[i * 3 + 0],
-					y = array[i * 3 + 1],
-					angle = array[i * 3 + 2];
+					y = array[i * 3 + 1];
+                if (y > 9 || x < -14 || x > 14) {
+                    continue;
+                }
+				var angle = array[i * 3 + 2];
 				ctx.save();
 				ctx.translate(x, y);        // Translate to the center of the box
 				ctx.rotate(angle);  // Rotate to the box body frame
-				ctx.rect(-boxWidth/2, -boxHeight/2, boxWidth, boxHeight);
-				ctx.stroke();
+				ctx.fillRect(-boxWidth/2, -boxHeight/2, boxWidth, boxHeight);
 				ctx.restore();
 			}
 		}

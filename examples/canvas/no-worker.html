@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>p2.js worker example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="../../build/p2.js"></script>
+</head>
+<body>
+
+    <!-- The canvas, where we draw stuff -->
+    <canvas width="600" height="400" id="myCanvas"></canvas>
+
+    <!-- Worker script, will be run in separate thread -->
+    <script>
+        // Parameters
+        var dt = 1/60,
+            N = 100,
+            boxWidth = 0.5,
+            boxHeight = 0.5,
+            zoom = 20,
+            worker,
+            canvas,
+            ctx;
+
+        var world,
+            timeStep = 1/60;
+
+        function initWorld() {
+            // Create a world
+            world = new p2.World({
+                gravity: [0, -5]
+            });
+
+            // Ground plane
+            var planeShape = new p2.Plane();
+            var groundBody = new p2.Body({
+                mass: 0
+            });
+            groundBody.addShape(planeShape);
+            world.addBody(groundBody);
+
+            // Create N boxes
+            for(var i=0; i!==N; i++){
+                var boxBody = new p2.Body({
+                    mass: 1,
+                    position: [Math.random()-0.5, boxHeight * i + 0.5,Math.random()-0.5]
+                });
+                var boxShape = new p2.Box({ width: boxWidth, height: boxHeight });
+                boxBody.addShape(boxShape);
+                world.addBody(boxBody);
+            }
+        };
+
+        function update(){
+             world.step(timeStep);
+        }
+
+
+        initWorld();
+        init();
+        animate();
+
+        function init(){
+
+            // Init canvas
+            canvas = document.getElementById("myCanvas");
+            w = canvas.width;
+            h = canvas.height;
+
+            ctx = canvas.getContext("2d");
+            ctx.lineWidth = 0.05;
+        }
+
+        function drawBodies(){
+            // Draw all bodies. Skip the first one, it's the ground plane
+            for(var i=1; i < N; i++){
+                var b = world.bodies[i];
+                var x = b.position[0];
+                var y = b.position[1];
+
+                if (y > 9 || x < -14 || x > 14) {
+                    continue;
+                }
+                var angle = b.angle;
+                ctx.save();
+                ctx.translate(x, y);        // Translate to the center of the box
+                ctx.rotate(angle);  // Rotate to the box body frame
+                ctx.fillRect(-boxWidth/2, -boxHeight/2, boxWidth, boxHeight);
+                ctx.restore();
+            }
+        }
+
+        function render(){
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Transform the canvas
+            // Note that we need to flip the y axis since Canvas pixel coordinates
+            // goes from top to bottom, while physics does the opposite.
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);  // Translate to the center
+            ctx.scale(zoom, -zoom);       // Zoom in and flip y axis
+
+            // Draw all bodies
+            drawBodies();
+
+            // Restore transform
+            ctx.restore();
+        }
+
+
+        // Animation loop
+        function animate(){
+            requestAnimationFrame(animate);
+
+            // Render scene
+            update();
+            render();
+        }
+
+     </script>
+</body>
+</html>
